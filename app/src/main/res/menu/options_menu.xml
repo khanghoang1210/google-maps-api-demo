@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/optionNormal"
+        android:title="NORMAL" />
+    <item
+        android:id="@+id/optionSatellite"
+        android:title="SATELLITE" />
+    <item
+        android:id="@+id/optionHybrid"
+        android:title="HYBRID" />
+    <item
+        android:id="@+id/optionTerrain"
+        android:title="TERRAIN" />
+    <item
+        android:id="@+id/optionNone"
+        android:title="NONE" />
+
+</menu>
