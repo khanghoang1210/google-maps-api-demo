@@ -47,6 +47,8 @@ public class MainActivity extends AppCompatActivity {
     private SearchView searchView;
     private MaterialButton drawBtn;
     private MaterialButton eraserBtn;
+    List<Marker> markerList = new ArrayList<>();
+
 
 
     @Override
@@ -116,6 +118,28 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, LOCATION_REQUEST_CODE);
             }
+
+            map.setOnMapClickListener(new GoogleMap.OnMapClickListener() {
+                @Override
+                public void onMapClick(@NonNull LatLng latLng) {
+                    MarkerOptions markerOptions = new MarkerOptions()
+                            .position(latLng);
+                    Marker marker = map.addMarker(markerOptions);
+                    Geocoder geocoder = new Geocoder(MainActivity.this, Locale.getDefault());
+                    List<Address> addresses;
+                    try {
+                        addresses = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1);
+                        if (!addresses.isEmpty()) {
+                            String address = addresses.get(0).getAddressLine(0);
+                            marker.setTitle(address);
+                        }
+                    }catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                    marker.showInfoWindow();
+                    markerList.add(marker);
+                }
+            });
         }
     };
 
