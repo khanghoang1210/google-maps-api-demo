@@ -32,11 +32,14 @@ import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.material.button.MaterialButton;
+import com.google.android.gms.maps.SupportMapFragment;
+
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import android.widget.SearchView;
 
 public class MainActivity extends AppCompatActivity {
     private static final int LOCATION_REQUEST_CODE = 11;
@@ -49,34 +52,101 @@ public class MainActivity extends AppCompatActivity {
     private MaterialButton eraserBtn;
     List<Marker> markerList = new ArrayList<>();
 
+    private List<Marker> markers = new ArrayList<>();
+    public static LatLng end = null;
+    private ArrayList<LatLng> latLngArrayList;
+    private ArrayList<String> locationNameArraylist;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        latLngArrayList = new ArrayList<>();
+        locationNameArraylist = new ArrayList<>();
+        final PolylineOptions[] polylineOptions = {new PolylineOptions()
+                .color(Color.RED)
+                .width(5f)};
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        searchView = findViewById(R.id.search_view);
 
         mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.map);
         if (mapFragment != null) {
             mapFragment.getMapAsync(callback);
         }
 
+        // draw
         drawBtn = findViewById(R.id.drawBtn);
         eraserBtn = findViewById(R.id.eraserBtn);
+
         drawBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                for (int i = 0; i < latLngArrayList.size(); i++) {
+                    Marker marker = map.addMarker(new MarkerOptions()
+                            .position(latLngArrayList.get(i))
+                            .title(locationNameArraylist.get(i)));
+                    markers.add(marker);
+                }
 
+                for (Marker marker : markers) {
+                    polylineOptions[0].add(marker.getPosition());
+                }
+
+                map.addPolyline(polylineOptions[0]);
             }
         });
 
+        // eraser
         eraserBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                // Clear all markers
+                for (Marker marker : markers) {
+                    marker.remove();
+                }
+                markers.clear();
+                map.clear();
+                latLngArrayList.clear();
+                locationNameArraylist.clear();
+                polylineOptions[0] = null;
             }
         });
-        searchView = findViewById(R.id.search_view);
+
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener(){
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+
+                String location = searchView.getQuery().toString();
+                List<Address> addressList = null;
+
+                // checking if the entered location is null or not.
+                if (location != null || location.equals("")) {
+                    Geocoder geocoder = new Geocoder(MainActivity.this);
+                    try {
+                        addressList = geocoder.getFromLocationName(location, 1);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                    Address address = addressList.get(0);
+                    LatLng latLng = new LatLng(address.getLatitude(), address.getLongitude());
+                    latLngArrayList.add(latLng);
+                    locationNameArraylist.add(location);
+                    map.addMarker(new MarkerOptions().position(latLng).title(location));
+                    map.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 20));
+                }
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                return false;
+            }
+        });
+
+        mapFragment.getMapAsync(callback);
     }
 
     @Override
@@ -180,4 +250,6 @@ public class MainActivity extends AppCompatActivity {
             });
         }
     }
+
 }
+
